@@ -21,9 +21,56 @@ const html = `<!DOCTYPE html>
         .dark input:focus, .dark textarea:focus, .dark select:focus {
             border-color: #6366f1;
         }
+        #result {
+            white-space: pre;
+            overflow-x: auto;
+            max-width: 100%;
+            padding: 1rem 1.25rem;
+            line-height: 1.6;
+            font-family: monospace;
+            font-size: 0.9375rem;
+            border-radius: 0.5rem;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            color: #495057;
+            margin: 0.75rem 0;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        
         .dark #result {
-            background-color: #3d3d3d;
-            border-color: #4a4a4a;
+            background-color: #2d3748;
+            border-color: #4a5568;
+            color: #e2e8f0;
+        }
+        
+        #result::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        #result::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        #result::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        #result::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+
+        .dark #result::-webkit-scrollbar-track {
+            background: #374151;
+        }
+
+        .dark #result::-webkit-scrollbar-thumb {
+            background: #4b5563;
+        }
+
+        .dark #result::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
         }
         
         .fade-in { animation: fadeIn 0.3s ease-in; }
@@ -108,6 +155,81 @@ const html = `<!DOCTYPE html>
         .container {
             padding-bottom: 60px;
         }
+
+        #resultContainer {
+            width: 100%;
+            max-width: 100%;
+            margin-top: 1rem;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            padding: 0 0.25rem;
+        }
+
+        .result-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #4b5563;
+        }
+
+        .dark .result-label {
+            color: #e5e7eb;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-button {
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            transition: all 0.2s;
+        }
+
+        .copy-button {
+            background-color: #e0f2fe;
+            color: #0284c7;
+            border: 1px solid #bae6fd;
+        }
+
+        .copy-button:hover {
+            background-color: #bae6fd;
+        }
+
+        .delete-button {
+            background-color: #fee2e2;
+            color: #ef4444;
+            border: 1px solid #fecaca;
+        }
+
+        .delete-button:hover {
+            background-color: #fecaca;
+        }
+
+        .dark .copy-button {
+            background-color: rgba(2, 132, 199, 0.2);
+            border-color: rgba(2, 132, 199, 0.3);
+        }
+
+        .dark .delete-button {
+            background-color: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        #content {
+            white-space: pre;
+            min-height: 100px;
+            font-family: monospace;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen transition-colors duration-200">
@@ -173,21 +295,22 @@ const html = `<!DOCTYPE html>
                 </div>
             </div>
             <div id="resultContainer" class="hidden">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-semibold text-gray-700">获取的内容：</span>
-                    <div class="flex gap-2">
+                <div class="result-header">
+                    <span class="result-label">获取的内容：</span>
+                    <div class="action-buttons">
                         <button onclick="copyContent()" 
-                            class="relative bg-blue-100 text-blue-600 px-3 py-1 rounded hover:bg-blue-200 transition-colors">
+                            class="copy-button action-button">
                             <i class="fas fa-copy"></i>
-                            <span class="tooltip" id="copyTooltip">复制成功!</span>
                         </button>
                         <button onclick="deleteContent()" 
-                            class="bg-red-100 text-red-600 px-3 py-1 rounded hover:bg-red-200 transition-colors">
+                            class="delete-button action-button">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 </div>
-                <div id="result" class="mt-2 p-4 rounded-lg border bg-gray-50"></div>
+                <div class="result-wrapper">
+                    <div id="result"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -201,7 +324,7 @@ const html = `<!DOCTYPE html>
     <!-- 页脚信息 -->
     <footer class="footer">
         <div class="flex items-center justify-center gap-2 text-gray-600 dark:text-gray-300">
-            <span>服务提供：<a href="https://github.com/yourusername" target="_blank" class="text-blue-500 hover:text-blue-600">Your Name</a></span>
+            <span>服务提供：<a href="https://github.com/dookcss/Web-Clipboard" target="_blank" class="text-blue-500 hover:text-blue-600">dookcss</a></span>
             <span class="mx-2">|</span>
             <span>Powered by <a href="https://workers.cloudflare.com" target="_blank" class="text-blue-500 hover:text-blue-600">Cloudflare Workers</a></span>
             <span class="mx-2">|</span>
@@ -336,7 +459,7 @@ const html = `<!DOCTYPE html>
                     const data = await response.json();
                     
                     resultContainer.classList.remove('hidden');
-                    if (response.ok) {
+                    if (response.ok && data.value) {
                         resultDiv.classList.remove('bg-red-50', 'border-red-200', 'text-red-700');
                         resultDiv.classList.add('bg-gray-50', 'border-gray-200', 'text-gray-700');
                         resultDiv.textContent = data.value;
@@ -356,14 +479,23 @@ const html = `<!DOCTYPE html>
         }
 
         async function copyContent() {
-            const content = document.getElementById('result').textContent;
             try {
-                await navigator.clipboard.writeText(content);
+                const resultDiv = document.getElementById('result');
+                if (!resultDiv || !resultDiv.textContent) {
+                    throw new Error('没有可复制的内容');
+                }
+                
+                await navigator.clipboard.writeText(resultDiv.textContent);
+                
+                // 显示复制成功提示
                 const tooltip = document.getElementById('copyTooltip');
-                tooltip.classList.add('show');
-                setTimeout(() => tooltip.classList.remove('show'), 2000);
+                if (tooltip) {
+                    tooltip.classList.add('show');
+                    setTimeout(() => tooltip.classList.remove('show'), 2000);
+                }
             } catch (err) {
-                alert('复制失败：' + err.message);
+                console.error('复制失败:', err);
+                alert('复制失败: ' + (err.message || '未知错误'));
             }
         }
 
